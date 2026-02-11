@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Meu pacote de análise limnológica"
+version: 1.0.0
+doi: 10.5281/zenodo.XXXXXXX
+authors:
+  - family-names: "Piato"
+    given-names: "Bruno Garcia"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
