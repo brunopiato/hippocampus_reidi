@@ -6,7 +6,9 @@
 import os
 import cv2
 import numpy as np
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display
 
 
 def calculate_color_percentage(image_path, color_names: list, color_ranges: list):
@@ -121,6 +123,61 @@ def pick_color_from_image(image_path):
     cv2.destroyAllWindows()
 
     return colors
+
+import cv2
+import matplotlib.pyplot as plt
+
+
+
+def pick_color_from_image_matplotlib(image_path):
+    colors = []
+
+    image = cv2.imread(image_path)
+    if image is None:
+        raise ValueError("Erro ao carregar a imagem")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+    ax.set_title("Clique na imagem para capturar cores")
+    ax.axis("off")
+
+    out = widgets.Output()
+    done = widgets.Button(
+        description="Finalizar seleção",
+        button_style="success"
+    )
+
+    def onclick(event):
+        if event.inaxes != ax or event.xdata is None:
+            return
+
+        x, y = int(event.xdata), int(event.ydata)
+        r, g, b = image[y, x]
+        colors.append([int(r), int(g), int(b)])
+
+        with out:
+            print(f"Pixel ({x}, {y}) → RGB = {r}, {g}, {b}")
+
+        ax.scatter(x, y, c='red', s=40)
+        fig.canvas.draw_idle()
+
+    def finish(_):
+        plt.close(fig)
+        with out:
+            print("\nSeleção finalizada.")
+            print("Cores capturadas:", colors)
+
+    fig.canvas.mpl_connect("button_press_event", onclick)
+    done.on_click(finish)
+
+    display(done, out)
+    plt.show()
+
+    return colors
+
+
+
 
 
 def process_images_in_folder(folder_path, color_names, color_ranges):
