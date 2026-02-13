@@ -5,7 +5,7 @@
         "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
 		"ghcr.io/devcontainers/features/python:1": {"version": "3.12"}
 	},
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0 libxkbcommon-x11-0",
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0 libxkbcommon-x11-0 && pip install --user -r requirements.txt",
     "customizations": {
         "vscode": {
             "extensions": [

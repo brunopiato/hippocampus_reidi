@@ -9,7 +9,7 @@ from .functions import calculate_color_percentage, process_images_in_folder, pic
 
 __version__ = '0.1.0'
 __name__ = '_Hippocampus reidi_'
-__author__ = 'Bruno Garcia Piato'
+__author__ = 'Amanda Vaccani, Bruno Garcia Piato'
 
 __all__ = [
     'calculate_color_percentage',

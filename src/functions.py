@@ -124,9 +124,6 @@ def pick_color_from_image(image_path):
 
     return colors
 
-import cv2
-import matplotlib.pyplot as plt
-
 
 
 def pick_color_from_image_matplotlib(image_path):
@@ -134,17 +131,17 @@ def pick_color_from_image_matplotlib(image_path):
 
     image = cv2.imread(image_path)
     if image is None:
-        raise ValueError("Erro ao carregar a imagem")
+        raise ValueError("Error loading image. Please provide a valid path to the image file.")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     fig, ax = plt.subplots()
     ax.imshow(image)
-    ax.set_title("Clique na imagem para capturar cores")
+    ax.set_title("Click on the image to pick colors")
     ax.axis("off")
 
     out = widgets.Output()
     done = widgets.Button(
-        description="Finalizar seleção",
+        description="End color selection",
         button_style="success"
     )
 
@@ -165,8 +162,8 @@ def pick_color_from_image_matplotlib(image_path):
     def finish(_):
         plt.close(fig)
         with out:
-            print("\nSeleção finalizada.")
-            print("Cores capturadas:", colors)
+            print("\nSelection finished.")
+            print("Captured colors:", colors)
 
     fig.canvas.mpl_connect("button_press_event", onclick)
     done.on_click(finish)
@@ -175,8 +172,6 @@ def pick_color_from_image_matplotlib(image_path):
     plt.show()
 
     return colors
-
-
 
 
 
