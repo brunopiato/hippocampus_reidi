@@ -6,7 +6,7 @@ It is very important that the image have its background removed in such a way th
 
 There are several functionalites inside the program:
 
-- A color picker function
+- A color picker function (two versions, one using matplotlib, which is better for Jupyter Notebooks in Dev Containers, and one using OpenCV)
 - A percentage estimator function
 - A class representing the image being analysed
 
