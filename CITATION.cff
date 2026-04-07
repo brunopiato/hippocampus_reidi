@@ -1,9 +1,39 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it."
-title: "Nome do seu software"
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Vaccani"
+    given-names: "Amanda do Carmo"
+    orcid: "https://orcid.org/0000-0001-7900-575X"
+  - family-names: "Freret-Meurer"
+    given-names: "Natalie Villar"
+    orcid: "https://orcid.org/0000-0002-9344-7228"
+  - family-names: "Piato"
+    given-names: "Bruno Garcia"
+    orcid: "https://orcid.org/0000-0001-7869-643X"
+  - family-names: "Neres-Lima"
+    given-names: "Vinicius"
+    orcid: "https://orcid.org/0000-0003-3802-3438"
+  - family-names: "Santos"
+    given-names: "Luciano Neves"
+title: "THE USE OF DIFFERENT TOOLS FOR BIOFLUORESCENCE ANALYSIS: CALIBRATING THE RELIABILITY OF ANALYSIS METHODS"
 version: "1.0.0"
 date-released: "2026-02-12"
 license: MIT
-authors:
-  - family-names: "Piato"
-    given-names: "Bruno Garcia"
+repository-code: "https://github.com/brunopiato/hippocampus_reidi"
+keywords:
+  - biofluorescence
+  - Hippocampus reidi
+  - Syngnathiformes
+  - analysis methods
+  - animal behavior
+  - biological communication
+  - light emission
+  - scientific methodology
+  - image-analysis
+  - python-script
+abstract: >-
+  This repositoy provides a Python-based script and standardized methods for 
+  analyzing biofluorescence images in marine organisms. Developed using 
+  Hippocampus reidi as a model, the tool evaluates biofluorescent hues and 
+  patterns, facilitating research into stress responses, predation, and 
+  evolutionary distribution of biofluorescence in bony fish.
