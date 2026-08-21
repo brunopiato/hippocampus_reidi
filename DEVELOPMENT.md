@@ -2,6 +2,13 @@
 
 ## Environment
 
+On Ubuntu, install virtual-environment support before creating the project environment:
+
+```bash
+sudo apt update
+sudo apt install python3 python3-venv
+```
+
 Create the project-local environment and install the development dependencies:
 
 ```bash
