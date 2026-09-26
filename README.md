@@ -124,15 +124,25 @@ The first uv sync command creates a local .venv folder automatically. This folde
 
 ## Running the notebook
 
-After the first-time setup, run:
+After the first-time setup, start JupyterLab by copying and running this complete command:
 
 ~~~bash
-uv run jupyter lab notebooks/module_usage.ipynb
+uv run jupyter lab --ServerApp.ip=127.0.0.1 --IdentityProvider.token="" --PasswordIdentityProvider.hashed_password="" notebooks/module_usage.ipynb
 ~~~
+
+The `--ServerApp.ip`, `--IdentityProvider.token`, and `--PasswordIdentityProvider.hashed_password` options are required. Together, they keep JupyterLab accessible only from this computer (`127.0.0.1`) and disable the login token and password. Do not replace this command with `uv run jupyter lab`, because the shorter command will ask for a token.
 
 On Windows, run the same command in PowerShell.
 
-JupyterLab will open in a browser. If the browser does not open automatically, the terminal will display a local address. Copy that address into a browser.
+If JupyterLab asks for a token, close it, return to the project folder, and run the complete command above again. Do not expose this server to a network.
+
+JupyterLab may not open the browser automatically. When the server starts, look in the terminal for a line similar to:
+
+~~~text
+http://127.0.0.1:8888/lab
+~~~
+
+Despite usually being `8888`, the port may have a different number. Copy the complete address shown in your terminal, open any web browser, paste the address into the address bar, and press Enter. You can also use the equivalent address `http://localhost:<port>/lab`, replacing `<port>` with the port shown in the terminal.
 
 In JupyterLab:
 
@@ -280,7 +290,7 @@ Close JupyterLab. In the project folder, run:
 
 ~~~bash
 uv sync
-uv run jupyter lab notebooks/module_usage.ipynb
+uv run jupyter lab --ServerApp.ip=127.0.0.1 --IdentityProvider.token="" --PasswordIdentityProvider.hashed_password="" notebooks/module_usage.ipynb
 ~~~
 
 Make sure the terminal is currently inside the project folder containing pyproject.toml.
