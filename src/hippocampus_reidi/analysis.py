@@ -6,7 +6,7 @@ import csv
 from collections.abc import Mapping, Sequence
 from os import PathLike
 from pathlib import Path
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 import cv2
 import numpy as np
@@ -15,6 +15,7 @@ from numpy.typing import NDArray
 type ImagePath = str | PathLike[str]
 type RGBColor = tuple[int, int, int]
 type ColorRange = tuple[Sequence[int], Sequence[int]]
+type AnalysisMethod = Literal["standard", "patternize"]
 
 
 class ColorMeasurement(TypedDict):
@@ -23,7 +24,7 @@ class ColorMeasurement(TypedDict):
     lower: RGBColor
     upper: RGBColor
     pixels: int
-    percentage: float
+    percentage: float  # Normalized proportion in [0, 1], rounded to four decimals.
 
 
 class ImageAnalysis(TypedDict):
@@ -33,7 +34,7 @@ class ImageAnalysis(TypedDict):
     total_pixels: int
     body_pixels: int
     background_pixels: int
-    background_percentage: float
+    background_percentage: float  # Normalized proportion in [0, 1], rounded to four decimals.
     colors: dict[str, ColorMeasurement]
 
 
@@ -41,6 +42,11 @@ _BACKGROUND_COLOR = np.array([0, 0, 0], dtype=np.uint8)
 _SUPPORTED_IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png"}
 _DEFAULT_OUTPUT_DIRECTORY = Path("data/output")
 _DEFAULT_OUTPUT_FILENAME = "biofluorescence_results.csv"
+_PROPORTION_DECIMAL_PLACES = 4
+
+
+def _rounded_proportion(numerator: int, denominator: int) -> float:
+    return round(numerator / denominator, _PROPORTION_DECIMAL_PLACES)
 
 
 def _read_rgb_image(image_path: ImagePath) -> NDArray[np.uint8]:
@@ -141,6 +147,30 @@ def make_patternize_color_ranges(
     return color_ranges
 
 
+def _resolve_color_ranges(
+    color_ranges: Mapping[str, ColorRange] | None,
+    method: AnalysisMethod,
+    patternize_rgb_colors: Mapping[str, Sequence[int]] | None,
+    col_offset: float,
+) -> list[tuple[str, NDArray[np.uint8], NDArray[np.uint8], RGBColor, RGBColor]]:
+    if method == "standard":
+        if color_ranges is None:
+            raise ValueError("color_ranges is required when method='standard'")
+        if patternize_rgb_colors is not None:
+            raise ValueError("patternize_rgb_colors is only valid when method='patternize'")
+        return _validate_color_ranges(color_ranges)
+
+    if method == "patternize":
+        if patternize_rgb_colors is None:
+            raise ValueError("patternize_rgb_colors is required when method='patternize'")
+        if color_ranges is not None:
+            raise ValueError("color_ranges is only valid when method='standard'")
+        patternize_ranges = make_patternize_color_ranges(patternize_rgb_colors, col_offset)
+        return _validate_color_ranges(patternize_ranges)
+
+    raise ValueError("method must be 'standard' or 'patternize'")
+
+
 def _analyze_rgb_image(
     image: NDArray[np.uint8],
     image_name: str,
@@ -166,7 +196,7 @@ def _analyze_rgb_image(
             "lower": lower_tuple,
             "upper": upper_tuple,
             "pixels": pixels,
-            "percentage": pixels / body_pixels * 100,
+            "percentage": _rounded_proportion(pixels, body_pixels),
         }
         masks[name] = mask
 
@@ -175,7 +205,7 @@ def _analyze_rgb_image(
         "total_pixels": total_pixels,
         "body_pixels": body_pixels,
         "background_pixels": background_pixels,
-        "background_percentage": background_pixels / total_pixels * 100,
+        "background_percentage": _rounded_proportion(background_pixels, total_pixels),
         "colors": colors,
     }
     return analysis, background_mask, masks
@@ -238,10 +268,10 @@ def _write_results_csv(
                         "total_pixels": analysis["total_pixels"],
                         "body_pixels": analysis["body_pixels"],
                         "background_pixels": analysis["background_pixels"],
-                        "background_percentage": analysis["background_percentage"],
+                        "background_percentage": f"{analysis['background_percentage']:.4f}",
                         "color": color_name,
                         "pixels": measurement["pixels"],
-                        "percentage": measurement["percentage"],
+                        "percentage": f"{measurement['percentage']:.4f}",
                         "lower_rgb": ",".join(str(value) for value in measurement["lower"]),
                         "upper_rgb": ",".join(str(value) for value in measurement["upper"]),
                     }
@@ -251,10 +281,18 @@ def _write_results_csv(
 
 def analyze_folder(
     folder_path: ImagePath,
-    color_ranges: Mapping[str, ColorRange],
+    color_ranges: Mapping[str, ColorRange] | None = None,
     output_path: ImagePath | None = _DEFAULT_OUTPUT_DIRECTORY,
+    *,
+    method: AnalysisMethod = "standard",
+    patternize_rgb_colors: Mapping[str, Sequence[int]] | None = None,
+    col_offset: float = 0.10,
 ) -> list[tuple[str, ImageAnalysis]]:
     """Analyze supported images in a folder and optionally save a CSV summary.
+
+    The default ``method="standard"`` uses explicit lower and upper RGB bounds from
+    ``color_ranges``. Use ``method="patternize"`` with RGB center values in
+    ``patternize_rgb_colors`` to build ranges using ``col_offset``.
 
     Images are processed in deterministic filename order. By default, results are saved
     to data/output/biofluorescence_results.csv. Pass None to disable CSV export or
@@ -264,7 +302,12 @@ def analyze_folder(
     if not folder.is_dir():
         raise ValueError(f"Image folder does not exist: {folder}")
 
-    validated_ranges = _validate_color_ranges(color_ranges)
+    validated_ranges = _resolve_color_ranges(
+        color_ranges,
+        method,
+        patternize_rgb_colors,
+        col_offset,
+    )
     image_paths = sorted(
         (
             path
@@ -286,3 +329,29 @@ def analyze_folder(
     if output_path is not None:
         _write_results_csv(results, output_path)
     return results
+
+
+def display_analysis_results(
+    results: ImageAnalysis | list[tuple[str, ImageAnalysis]],
+) -> dict[str, object] | list[tuple[str, dict[str, object]]]:
+    """Return analysis results with proportions formatted to four decimals.
+
+    The returned object is a display-only copy. The original numeric results are not
+    modified, so they remain suitable for calculations.
+    """
+
+    def format_analysis(analysis: ImageAnalysis) -> dict[str, object]:
+        formatted = dict(analysis)
+        formatted["background_percentage"] = f"{analysis['background_percentage']:.4f}"
+        formatted["colors"] = {
+            name: {
+                **measurement,
+                "percentage": f"{measurement['percentage']:.4f}",
+            }
+            for name, measurement in analysis["colors"].items()
+        }
+        return formatted
+
+    if isinstance(results, list):
+        return [(image_name, format_analysis(analysis)) for image_name, analysis in results]
+    return format_analysis(results)

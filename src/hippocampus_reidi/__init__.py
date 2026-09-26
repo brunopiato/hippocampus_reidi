@@ -2,7 +2,12 @@
 
 from importlib.metadata import version
 
-from .analysis import analyze_folder, analyze_image, make_patternize_color_ranges
+from .analysis import (
+    analyze_folder,
+    analyze_image,
+    display_analysis_results,
+    make_patternize_color_ranges,
+)
 from .color_picker import pick_color_from_image, pick_color_from_image_matplotlib
 from .visualization import plot_image_analysis
 
@@ -15,6 +20,7 @@ __author__ = (
 __all__ = [
     "analyze_folder",
     "analyze_image",
+    "display_analysis_results",
     "make_patternize_color_ranges",
     "pick_color_from_image",
     "pick_color_from_image_matplotlib",

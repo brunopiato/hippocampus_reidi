@@ -58,7 +58,7 @@ def plot_image_analysis(
         axis.text(
             0.5,
             -0.05,
-            f"{analysis['background_percentage']:.2f}%",
+            f"{analysis['background_percentage']:.4f}",
             ha="center",
             va="top",
             transform=axis.transAxes,
@@ -73,7 +73,7 @@ def plot_image_analysis(
             axis.text(
                 0.5,
                 -0.05,
-                f"{analysis['colors'][name]['percentage']:.2f}%",
+                f"{analysis['colors'][name]['percentage']:.4f}",
                 ha="center",
                 va="top",
                 transform=axis.transAxes,

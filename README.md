@@ -14,7 +14,7 @@ The **body area** is the visible portion of the image considered part of the ani
 
 An **RGB range** is a lower and upper red-green-blue triplet that defines a selected color interval in the image.
 
-**Biofluorescence coverage** is the percentage of body-area pixels whose RGB values fall inside a selected RGB range.
+**Biofluorescence coverage** is the proportion of body-area pixels whose RGB values fall inside a selected RGB range. Coverage values are reported from 0 to 1 and rounded to four decimal places.
 
 ## What the analysis measures
 
@@ -24,21 +24,23 @@ The workflow classifies pixels as follows:
 - body pixels are every non-black pixel;
 - selected-color pixels are body pixels inside a user-defined RGB range.
 
-For each selected color, the reported percentage is:
+For each selected color, the reported value is:
 
 ~~~text
-selected-color percentage =
-selected body pixels / total body pixels × 100
+selected-color value =
+selected body pixels / total body pixels
 ~~~
 
-The background percentage is calculated separately:
+The background value is calculated separately:
 
 ~~~text
-background percentage =
-background pixels / total image pixels × 100
+background value =
+background pixels / total image pixels
 ~~~
 
-Each RGB range is evaluated independently. If two ranges overlap, the same pixel can be included in both ranges, so their percentages may add up to more than 100%.
+These values are proportions from 0 to 1, rounded to four decimal places. The notebook, CSV export, and plots display them with exactly four decimal places (for example, `0.0125` or `0.0000`). Multiply a value by 100 when a percentage expressed from 0 to 100 is needed.
+
+Each RGB range is evaluated independently. If two ranges overlap, the same pixel can be included in both ranges, so their values may add up to more than 1.
 
 The analysis excludes background pixels from both the numerator and denominator of every selected color range. This prevents the black background from being counted as a selected color.
 
@@ -199,7 +201,28 @@ patternize_ranges = hr.make_patternize_color_ranges(
 results = hr.analyze_image(image_path, patternize_ranges)
 ~~~
 
+For folder analysis, `analyze_folder` can create these ranges directly:
+
+~~~python
+folder_results = hr.analyze_folder(
+    "data/input",
+    method="patternize",
+    patternize_rgb_colors=rgb_colors,
+    col_offset=0.10,
+    output_path=None,
+)
+~~~
+
+`method="standard"` is the default and expects `color_ranges` with lower and upper RGB bounds.
+The Patternize mode expects RGB center values instead.
+
 This helper matches the per-channel color tolerance only. It does not reproduce Patternize's landmark or registration alignment, image resampling, outline masking, or `patArea` denominator. Those settings must also be made equivalent before comparing final measurements.
+
+## Why use this workflow?
+
+For standardized images that are already aligned and use a consistent background, this workflow can provide a simpler and more transparent way to calculate per-image color coverage. Its main advantages are: no landmark or registration step, explicit pixel-level rules, preservation of the original image resolution, straightforward batch processing, and easy auditing of the RGB ranges and generated CSV results.
+
+This project implements a color-selection approach inspired by Patternize's RGB threshold. It is not a reimplementation of Patternize and does not provide its image-alignment or pattern-homology workflow.
 
 ## Results
 
@@ -215,8 +238,8 @@ Each row represents one image and one selected color. The CSV includes:
 
 - image filename;
 - total, body, and background pixel counts;
-- background percentage for the image;
-- selected-color pixel count and percentage;
+- background value as a proportion from 0 to 1, rounded to four decimals;
+- selected-color pixel count and normalized value from 0 to 1, rounded to four decimals;
 - lower and upper RGB bounds used for that color.
 
 The background measurements are repeated in every color row for the same image so that each row can be interpreted independently.
