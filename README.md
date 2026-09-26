@@ -1,289 +1,293 @@
-# Biofluorescence image analysis for *Hippocampus reidi*
+# Biofluorescence image analysis for Hippocampus reidi
 
-This repository contains a reproducible workflow for estimating how much of an animal's
-visible body area falls within selected RGB color ranges. It was developed to support the
-study of biofluorescence in the longsnout seahorse, *Hippocampus reidi*.
+This repository accompanies a scientific study of biofluorescence in the longsnout seahorse, Hippocampus reidi.
 
-The analysis can be used with one image or with a folder of images. An example dataset and
-a ready-to-run Jupyter notebook are included. Also an auxiliary function to get RGB values 
-from pixels was developed here.
+It demonstrates a reproducible Python workflow that estimates how much of the visible body area in a standardized photograph falls within RGB color ranges selected by the researcher. The repository is an example workflow for the article, not a general-purpose Python library.
+
+## Scientific terms
+
+**Biofluorescence** is visible light emitted by material after excitation by an external light source. This is the term used for the phenomenon represented in the standardized photographs. The term bioluminescence does not apply to these photographs.
+
+A **standardized image** is a photograph acquired and prepared according to the study procedure, with comparable lighting, camera settings, framing, and excluded regions across samples.
+
+The **body area** is the visible portion of the image considered part of the animal. In this workflow, it is represented by all non-black pixels, rather than the total image area.
+
+An **RGB range** is a lower and upper red-green-blue triplet that defines a selected color interval in the image.
+
+**Biofluorescence coverage** is the percentage of body-area pixels whose RGB values fall inside a selected RGB range.
 
 ## What the analysis measures
 
-The program separates each image into:
+The workflow classifies pixels as follows:
 
-- background pixels, defined as pure black (`RGB = 0, 0, 0`) are desregarded of the analysis;
-- body pixels, defined as every non-black pixel;
-- pixels that fall within each RGB range selected by the researcher.
+- background pixels are pure black pixels with RGB equal to (0, 0, 0);
+- body pixels are every non-black pixel;
+- selected-color pixels are body pixels inside a user-defined RGB range.
 
-For each color range, the reported value is:
+For each selected color, the reported percentage is:
 
-```text
-percentage = pixels inside the RGB range / non-black body pixels × 100
-```
+~~~text
+selected-color percentage =
+selected body pixels / total body pixels × 100
+~~~
 
-The program also displays the original image and the masks used in the calculation, making
-it possible to visually inspect the classification.
+The background percentage is calculated separately:
+
+~~~text
+background percentage =
+background pixels / total image pixels × 100
+~~~
+
+Each RGB range is evaluated independently. If two ranges overlap, the same pixel can be included in both ranges, so their percentages may add up to more than 100%.
+
+The analysis excludes background pixels from both the numerator and denominator of every selected color range. This prevents the black background from being counted as a selected color.
 
 ## Before starting
 
-Windows and macOS users should install
-[Python 3.12 or newer](https://www.python.org/downloads/). Ubuntu users should follow the
-Ubuntu instructions below because its Python installation separates support for virtual
-environments into an additional system package. JupyterLab and the analysis dependencies
-will be installed during the first-time setup.
+You need an internet connection for the first setup because uv downloads Python packages and creates the local project environment.
 
-Download the repository using one of these options:
-
-- On GitHub, select **Code → Download ZIP**, then extract the downloaded file.
-- If Git is installed, run:
-
-```bash
-git clone https://github.com/brunopiato/hippocampus_reidi.git
-cd hippocampus_reidi
-```
-
-Open a terminal inside the downloaded project folder and follow the instructions for your
-operating system. Copy and run each command one at a time.
+This project uses uv to install the exact dependency versions recorded in uv.lock. You do not need to create or activate a virtual environment manually.
 
 ## First-time setup
 
-The `.venv` folder is not included in the downloaded repository. It stores the local Python
-environment and must be created once on each computer. After checking the Python version,
-the instructions create this folder and install the analysis program and its dependencies
-inside it.
+### Windows
 
-### Windows — first time
+1. Install uv.
 
-Open PowerShell in the project folder. First, confirm that Python 3.12 or newer is available:
+Open PowerShell and copy the following command:
 
-```powershell
-py -3.12 --version
-```
+~~~powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+~~~
 
-Create the `.venv` folder:
+2. Close PowerShell and open it again.
 
-```powershell
-py -3.12 -m venv .venv
-```
+3. Download this repository. On GitHub, choose Code, then Download ZIP. Extract the ZIP file.
 
-Install the required programs inside `.venv`:
+If Git is already installed, you can instead run:
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -e .
-```
+~~~powershell
+git clone https://github.com/brunopiato/hippocampus_reidi.git
+~~~
 
-Open the notebook:
+4. Open PowerShell in the extracted project folder.
 
-```powershell
-.\.venv\Scripts\python.exe -m jupyterlab notebooks/module_usage.ipynb
-```
+5. Confirm that uv is available:
 
-### macOS — first time
+~~~powershell
+uv --version
+~~~
 
-Open Terminal in the project folder. First, confirm that Python 3.12 or newer is available:
+6. Install the project dependencies:
 
-```bash
-python3 --version
-```
+~~~powershell
+uv sync
+~~~
 
-Create the `.venv` folder:
+### macOS and Linux
 
-```bash
-python3 -m venv .venv
-```
+1. Install uv.
 
-Install the required programs inside `.venv`:
+Open Terminal and copy the following command:
 
-```bash
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e .
-```
+~~~bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+~~~
 
-Open the notebook:
+2. Close Terminal and open it again.
 
-```bash
-.venv/bin/python -m jupyterlab notebooks/module_usage.ipynb
-```
+3. Download this repository. On GitHub, choose Code, then Download ZIP. Extract the ZIP file.
 
-### Ubuntu 24.04 or newer — first time
+If Git is already installed, you can instead run:
 
-Ubuntu provides virtual-environment support as a separate package. Install Python and this
-package before creating `.venv`:
+~~~bash
+git clone https://github.com/brunopiato/hippocampus_reidi.git
+~~~
 
-```bash
-sudo apt update
-sudo apt install python3 python3-venv
-```
+4. Open Terminal in the extracted project folder.
 
-Confirm that the installed Python version is 3.12 or newer:
+5. Confirm that uv is available:
 
-```bash
-python3 --version
-```
+~~~bash
+uv --version
+~~~
 
-Create the `.venv` folder:
+6. Install the project dependencies:
 
-```bash
-python3 -m venv .venv
-```
+~~~bash
+uv sync
+~~~
 
-Install the required programs inside `.venv`:
+The first uv sync command creates a local .venv folder automatically. This folder is not part of the repository and does not need to be edited.
 
-```bash
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e .
-```
+## Running the notebook
 
-Open the notebook:
+After the first-time setup, run:
 
-```bash
-.venv/bin/python -m jupyterlab notebooks/module_usage.ipynb
-```
+~~~bash
+uv run jupyter lab notebooks/module_usage.ipynb
+~~~
 
-On another Linux distribution, install Python 3.12 or newer and its `venv` package using
-the distribution's package manager, then follow the same commands used for Ubuntu.
+On Windows, run the same command in PowerShell.
 
-JupyterLab will open the notebook in your web browser. Run the cells from top to bottom
-using the **Run** button. Keep the terminal open while using the notebook. To stop
-JupyterLab, return to the terminal and press `Ctrl+C`.
+JupyterLab will open in a browser. If the browser does not open automatically, the terminal will display a local address. Copy that address into a browser.
 
-## Open the notebook again later
+In JupyterLab:
 
-As long as the `.venv` folder still exists, do not recreate the environment or reinstall the
-dependencies. Open a terminal in the project folder and run only the command for your
-operating system.
+1. Open notebooks/module_usage.ipynb if it is not already open.
+2. Run the cells from top to bottom using the play button beside each cell or the Run All command.
+3. Do not change the order of the cells.
+4. The example uses the images and RGB ranges included in this repository.
 
-On Windows:
+## Notebook sections
 
-```powershell
-.\.venv\Scripts\python.exe -m jupyterlab notebooks/module_usage.ipynb
-```
+The notebook demonstrates:
 
-On macOS or Linux:
+1. loading the project;
+2. selecting RGB values interactively with the optional color picker;
+3. analyzing one standardized seahorse image;
+4. viewing the original image and generated masks;
+5. analyzing every supported image in data/input;
+6. saving the results to data/output/biofluorescence_results.csv.
 
-```bash
-.venv/bin/python -m jupyterlab notebooks/module_usage.ipynb
-```
+The color picker is optional. The analysis can be run directly with the RGB ranges already written in the notebook.
 
-If `.venv` has been deleted, repeat the **First-time setup** instructions.
+## Preparing and replacing input images
 
-## Use the notebook in Visual Studio Code
+The example images are stored in data/input. To analyze other photographs:
 
-[Visual Studio Code](https://code.visualstudio.com/) can be used instead of opening
-JupyterLab in a web browser.
+1. prepare the images using the same acquisition and background-removal procedure;
+2. copy the prepared JPEG, JPG, or PNG files into data/input;
+3. remove or move the example images if you do not want to analyze them;
+4. update the RGB ranges in notebooks/module_usage.ipynb;
+5. run the notebook from the first cell.
 
-Before using VS Code for the first time:
+The percentage depends strongly on image preparation. Use consistent lighting, camera settings, white balance, camera distance, and background-removal procedures across samples.
 
-1. Complete the **First-time setup** for your operating system, including the commands that
-   create `.venv` and install the required programs. The command that opens JupyterLab can
-   be skipped.
-2. Install Visual Studio Code.
-3. Open Visual Studio Code and install the official **Python** and **Jupyter** extensions
-   from Microsoft.
-4. Select **File → Open Folder** and open the downloaded `hippocampus_reidi` project folder.
-5. In the file explorer inside VS Code, open `notebooks/module_usage.ipynb`.
-6. Select **Select Kernel** in the upper-right corner of the notebook.
-7. Choose **Python Environments**, then select the Python interpreter inside the project's
-   `.venv` folder.
+Regions that must not contribute to the body-area calculation should be replaced with pure black (0, 0, 0). With JPEG files, compression can change black pixels into near-black pixels. PNG is preferable when exact black background pixels must be preserved.
 
-The interpreter path ends with `.venv\Scripts\python.exe` on Windows or
-`.venv/bin/python` on macOS and Linux. After selecting it, run the notebook cells from top
-to bottom using **Run All** or the run button beside each cell.
+## Choosing RGB ranges
 
-On later uses, open the same project folder and notebook. VS Code will normally remember the
-selected environment. If it does not, repeat the **Select Kernel** steps above.
+An RGB range has a lower and upper red-green-blue triplet for each channel:
 
-## Using the notebook
+~~~python
+color_ranges = {
+    "green": ((0, 100, 0), (100, 255, 100)),
+    "red": ((100, 0, 0), (255, 100, 100)),
+    "blue": ((0, 35, 102), (204, 204, 255)),
+}
+~~~
 
-The example notebook is organized into four parts:
+The lower and upper values must be integers from 0 to 255. The lower value cannot be greater than the upper value for any channel.
 
-1. Load the analysis program.
-2. Select an image and define the RGB ranges.
-3. Analyze one image and inspect its masks and percentages.
-4. Apply the same RGB ranges to all supported images in a folder.
+Use the optional color picker to inspect pixels in an image and then define ranges that match the study protocol. The ranges included in the notebook are examples for the included images and should not be treated as universal biological thresholds.
 
-The notebook also includes an optional interactive color picker. Click points on the image
-to inspect their RGB values and select **End color selection** when finished.
+## Comparing with Patternize
 
-To analyze your own material:
+The optional helper `make_patternize_color_ranges` converts RGB center values and a `col_offset` into ranges that approximate the color-threshold rule used by the R package Patternize. The default `col_offset=0.10` matches Patternize's default color offset, but the argument can be changed to match the value used in the R analysis.
 
-1. Add the prepared images to a folder inside the project.
-2. Change `image_path` or `folder_path` in the notebook as needed.
-3. Replace the example RGB ranges with ranges calibrated for your study.
-4. Run the analysis and visually inspect every generated mask.
+~~~python
+rgb_colors = {
+    "green": (110, 172, 3),
+}
 
-JPEG, PNG, and JPG files are supported.
+patternize_ranges = hr.make_patternize_color_ranges(
+    rgb_colors,
+    col_offset=0.10,
+)
 
-## Preparing images
+results = hr.analyze_image(image_path, patternize_ranges)
+~~~
 
-Image preparation directly affects the calculated percentages.
+This helper matches the per-channel color tolerance only. It does not reproduce Patternize's landmark or registration alignment, image resampling, outline masking, or `patArea` denominator. Those settings must also be made equivalent before comparing final measurements.
 
-- Remove all regions that must not be included in the body-area calculation.
-- Replace the removed background with pure black (`RGB = 0, 0, 0`).
-- Prefer PNG after background removal. JPEG compression can turn black pixels into
-  near-black pixels, which the current method does not classify as background.
-- Use consistent lighting, camera settings, white balance, distance, and image-processing
-  procedures across samples.
-- Calibrate RGB ranges for the acquisition conditions of each study. The ranges included in
-  the notebook are examples and should not be treated as universal biofluorescence ranges.
+## Results
 
-## Interpreting the results
+The notebook saves a CSV file at:
 
-Each selected color produces a pixel count, a percentage, and a visual mask. The background
-percentage is calculated relative to the complete image; color percentages are calculated
-relative to the non-black body area.
+~~~text
+data/output/biofluorescence_results.csv
+~~~
 
-Color ranges are evaluated independently. If ranges overlap, a pixel can be counted in more
-than one range and the percentages may sum to more than 100%. Researchers should therefore
-document the selected RGB bounds and inspect the masks before comparing individuals or
-experimental groups.
+The output directory is created automatically. The CSV is ignored by Git because it is a generated result.
+
+Each row represents one image and one selected color. The CSV includes:
+
+- image filename;
+- total, body, and background pixel counts;
+- background percentage for the image;
+- selected-color pixel count and percentage;
+- lower and upper RGB bounds used for that color.
+
+The background measurements are repeated in every color row for the same image so that each row can be interpreted independently.
+
+The analysis can also be used directly from Python:
+
+~~~python
+from pathlib import Path
+
+import hippocampus_reidi as hr
+
+color_ranges = {
+    "red": ((100, 0, 0), (255, 100, 100)),
+}
+
+results = hr.analyze_folder(
+    Path("data/input"),
+    color_ranges,
+)
+
+hr.plot_image_analysis(
+    Path("data/input/imagem6.jpg"),
+    color_ranges,
+)
+~~~
+
+By default, analyze_folder writes data/output/biofluorescence_results.csv. To use another location, pass a directory or CSV path through output_path. To disable CSV export, pass output_path=None.
 
 ## Troubleshooting
 
-### The `.venv` Python reports `No module named pip`
+### The command uv is not recognized
 
-This means that `.venv` was only partially created. On Ubuntu, it normally happens when the
-`python3-venv` system package was not installed first. Preserve the incomplete folder under
-a different name:
+Close the terminal, open it again, and run uv --version. The uv installer adds the command to the user environment, but an already-open terminal may not know about that change.
 
-```bash
-mv .venv .venv-incomplete
-```
+### The notebook cannot import hippocampus_reidi
 
-Then install `python3-venv` and repeat the Ubuntu first-time setup:
+Close JupyterLab. In the project folder, run:
 
-```bash
-sudo apt update
-sudo apt install python3 python3-venv
-python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -e .
-```
+~~~bash
+uv sync
+uv run jupyter lab notebooks/module_usage.ipynb
+~~~
 
-After the notebook is working, `.venv-incomplete` can be deleted.
+Make sure the terminal is currently inside the project folder containing pyproject.toml.
 
-### The notebook cannot import `hippocampus_reidi`
+### JupyterLab opens but the interactive color picker does not work
 
-If the notebook reports that `hippocampus_reidi` cannot be found, close JupyterLab and run
-the installation command again from the project folder.
+The color picker requires the notebook widget support. Run the notebook in JupyterLab rather than opening the file as a static document. If the optional picker still does not work, skip that section and use the RGB ranges already defined in the notebook.
 
-When using VS Code instead of JupyterLab, install the official Python and Jupyter extensions
-and select the Python environment located in the project's `.venv` folder as the notebook
-kernel.
+### The percentage is zero or unexpectedly large
+
+Check the selected RGB bounds and inspect the generated masks. Also confirm that the image uses the expected RGB colors and that the background is pure black. Overlapping ranges are independent and can count the same pixel more than once.
+
+### There are no images to analyze
+
+Confirm that the files are directly inside data/input and use the .jpg, .jpeg, or .png extensions.
+
+## Verifying the project
+
+These commands are mainly for maintainers:
+
+~~~bash
+uv run pytest
+uv run ruff check .
+uv run ruff format --check .
+~~~
 
 ## Citation
 
-If this software contributes to a publication, cite it using the metadata provided in
-[`CITATION.cff`](CITATION.cff). GitHub also displays this information through the
-**Cite this repository** option.
+If this workflow contributes to a publication, cite the repository using the metadata in CITATION.cff. GitHub also displays this metadata through the Cite this repository option.
 
 ## License
 
-This project is distributed under the [MIT License](LICENSE).
-
-## Development
-
-Technical information for contributors and maintainers is available in
-[`DEVELOPMENT.md`](DEVELOPMENT.md).
+This project is distributed under the MIT License.

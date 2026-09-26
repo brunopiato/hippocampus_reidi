@@ -58,7 +58,8 @@ def pick_color_from_image_matplotlib(
         raise ValueError(f"Unable to read image: {image_path}")
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    figure, axis = plt.subplots()
+    with plt.ioff():
+        figure, axis = plt.subplots()
     axis.imshow(image)
     axis.set_title("Click on the image to pick colors")
     axis.axis("off")
@@ -73,19 +74,18 @@ def pick_color_from_image_matplotlib(
         x, y = int(event.xdata), int(event.ydata)
         red, green, blue = image[y, x]
         colors.append([int(red), int(green), int(blue)])
-        with output:
-            print(f"Pixel ({x}, {y}) -> RGB = {red}, {green}, {blue}")
+        output.append_stdout(f"Pixel ({x}, {y}) -> RGB = {red}, {green}, {blue}\n")
         axis.scatter(x, y, c="red", s=40)
         figure.canvas.draw_idle()
 
     def finish(_button: object) -> None:
+        figure.canvas.mpl_disconnect(connection_id)
+        done.disabled = True
         plt.close(figure)
-        with output:
-            print("Selection finished.")
-            print("Captured colors:", colors)
+        output.append_stdout("Selection finished.\n")
+        output.append_stdout(f"Captured colors: {colors}\n")
 
-    figure.canvas.mpl_connect("button_press_event", on_click)
+    connection_id = figure.canvas.mpl_connect("button_press_event", on_click)
     done.on_click(finish)
-    display(done, output)
-    plt.show()
+    display(widgets.VBox([figure.canvas, done, output]))
     return colors
